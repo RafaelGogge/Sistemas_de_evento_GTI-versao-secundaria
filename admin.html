@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,13 +8,14 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/admin.css">
 </head>
+
 <body>
     <div class="container">
         <header>
             <h1>Painel de Administração - EVENTOS ETSUS</h1>
             <a href="index.html" class="admin-link">Voltar para Visualização</a>
         </header>
-        
+
         <div class="admin-container">
             <nav class="admin-sidebar" aria-label="Menu de navegação">
                 <h3>Menu</h3>
@@ -22,30 +24,30 @@
                     <li><button id="btn-view-events">Ver Todos os Eventos</button></li>
                 </ul>
             </nav>
-            
+
             <main class="admin-content">
                 <section id="form-container" class="form-container">
                     <h2 id="form-title">Adicionar Novo Evento</h2>
                     <form id="event-form">
                         <input type="hidden" id="event-id">
-                        
+
                         <div class="form-group">
                             <label for="event-title">Título do Evento*</label>
                             <input type="text" id="event-title" required maxlength="100">
                         </div>
-                        
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="event-date">Data*</label>
                                 <input type="date" id="event-date" required>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="event-space">Espaço*</label>
                                 <input type="text" id="event-space" required maxlength="50">
                             </div>
                         </div>
-                        
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="event-floor">Andar*</label>
@@ -56,37 +58,39 @@
                                     <option value="3º">3º Andar</option>
                                 </select>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="event-participants">Participantes</label>
                                 <input type="number" id="event-participants" min="0" max="500">
                             </div>
                         </div>
-                        
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="event-start">Horário de Início*</label>
                                 <input type="time" id="event-start" required>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="event-end">Horário de Término*</label>
                                 <input type="time" id="event-end" required>
                             </div>
                         </div>
-                        
+
                         <div class="form-actions">
                             <button type="button" id="btn-cancel" class="btn-secondary">Cancelar</button>
                             <button type="submit" id="btn-submit" class="btn-primary">Salvar Evento</button>
-                            <button type="button" id="btn-delete" class="btn-danger" style="display: none;">Excluir Evento</button>
+                            <button type="button" id="btn-delete" class="btn-danger" style="display: none;">Excluir
+                                Evento</button>
                         </div>
                     </form>
                 </section>
-                
+
                 <section id="list-container" class="list-container" style="display: none;">
                     <h2 id="list-title">Todos os Eventos</h2>
                     <div class="list-actions">
-                        <input type="text" id="list-search" placeholder="Pesquisar eventos..." aria-label="Pesquisar eventos">
+                        <input type="text" id="list-search" placeholder="Pesquisar eventos..."
+                            aria-label="Pesquisar eventos">
                     </div>
                     <div class="table-responsive">
                         <table>
@@ -112,4 +116,5 @@
     <script src="js/database.js"></script>
     <script src="js/admin.js"></script>
 </body>
+
 </html>
