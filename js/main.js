@@ -1,152 +1,136 @@
 document.addEventListener('DOMContentLoaded', () => {
     // DOM elements
-    const eventsBody = document.getElementById('events-body');
-    const floorFilter = document.getElementById('floor-filter');
-    const timeFilter = document.getElementById('time-filter');
-    const searchInput = document.getElementById('search-input');
-    const dailyParticipants = document.getElementById('daily-participants');
-    const monthlyParticipants = document.getElementById('monthly-participants');
-    const yearlyParticipants = document.getElementById('yearly-participants');
-    const viewCurrentBtn = document.getElementById('view-current');
-    const viewUpcomingBtn = document.getElementById('view-upcoming');
-    const highlightedRoom = document.getElementById('highlighted-room');
-    const currentDateElement = document.getElementById('current-date');
-    const pageTitle = document.getElementById('page-title');
-    
+    const elements = {
+        eventsBody: document.getElementById('events-body'),
+        floorFilter: document.getElementById('floor-filter'),
+        timeFilter: document.getElementById('time-filter'),
+        searchInput: document.getElementById('search-input'),
+        dailyParticipants: document.getElementById('daily-participants'),
+        monthlyParticipants: document.getElementById('monthly-participants'),
+        yearlyParticipants: document.getElementById('yearly-participants'),
+        viewCurrentBtn: document.getElementById('view-current'),
+        viewUpcomingBtn: document.getElementById('view-upcoming'),
+        highlightedRoom: document.getElementById('highlighted-room'),
+        currentDateElement: document.getElementById('current-date'),
+        pageTitle: document.getElementById('page-title')
+    };
+
     // State
     let currentView = 'today';
     let events = [];
-    
-    // Initialize the page
+
+    // Initialize
+    init();
+
     function init() {
         updateCurrentDate();
         loadStats();
         setupEventListeners();
         loadEvents();
     }
-    
+
     function updateCurrentDate() {
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        const today = new Date();
-        const dateString = today.toLocaleDateString('pt-BR', options);
-        currentDateElement.textContent = dateString;
+        const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        elements.currentDateElement.textContent = new Date().toLocaleDateString('pt-BR', options);
     }
-    
+
     function loadStats() {
-        // In a real app, these would come from an API
-        dailyParticipants.textContent = "120";
-        monthlyParticipants.textContent = "1500";
-        yearlyParticipants.textContent = "750";
+        const todayEvents = eventDB.getCurrentEvents();
+        const totalParticipants = todayEvents.reduce((sum, event) => sum + (event.participants || 0), 0);
+        
+        elements.dailyParticipants.textContent = totalParticipants;
+        elements.monthlyParticipants.textContent = "1500";
+        elements.yearlyParticipants.textContent = "750";
     }
-    
+
     function setupEventListeners() {
-        floorFilter.addEventListener('change', filterEvents);
-        timeFilter.addEventListener('change', filterEvents);
-        searchInput.addEventListener('input', filterEvents);
+        elements.floorFilter.addEventListener('change', filterEvents);
+        elements.timeFilter.addEventListener('change', filterEvents);
+        elements.searchInput.addEventListener('input', filterEvents);
         
-        viewCurrentBtn.addEventListener('click', () => {
+        elements.viewCurrentBtn.addEventListener('click', () => {
             currentView = 'today';
-            viewCurrentBtn.classList.add('active');
-            viewUpcomingBtn.classList.remove('active');
+            updateActiveButton();
             loadEvents();
         });
         
-        viewUpcomingBtn.addEventListener('click', () => {
+        elements.viewUpcomingBtn.addEventListener('click', () => {
             currentView = 'upcoming';
-            viewUpcomingBtn.classList.add('active');
-            viewCurrentBtn.classList.remove('active');
+            updateActiveButton();
             loadEvents();
         });
     }
-    
+
+    function updateActiveButton() {
+        elements.viewCurrentBtn.classList.toggle('active', currentView === 'today');
+        elements.viewUpcomingBtn.classList.toggle('active', currentView === 'upcoming');
+        elements.pageTitle.textContent = currentView === 'today' 
+            ? `EVENTOS ETSUS - ${elements.currentDateElement.textContent}`
+            : 'EVENTOS ETSUS - PRÓXIMOS EVENTOS';
+    }
+
     function loadEvents() {
-        if (currentView === 'today') {
-            events = eventDB.getCurrentEvents();
-            pageTitle.textContent = `EVENTOS ETSUS - ${currentDateElement.textContent}`;
-        } else {
-            events = eventDB.getUpcomingEvents();
-            pageTitle.textContent = 'EVENTOS ETSUS - PRÓXIMOS EVENTOS';
-        }
+        events = currentView === 'today' 
+            ? eventDB.getCurrentEvents() 
+            : eventDB.getUpcomingEvents();
         
         renderEvents(events);
         updateHighlightedRoom();
     }
-    
+
     function renderEvents(eventsToRender) {
-        eventsBody.innerHTML = '';
-        
-        if (eventsToRender.length === 0) {
-            eventsBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum evento encontrado</td></tr>';
-            return;
-        }
-        
-        eventsToRender.forEach(event => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${event.title}</td>
-                <td>${event.description || '-'}</td>
-                <td>${event.space}</td>
-                <td>${event.floor}</td>
-                <td>${event.startTime} às ${event.endTime}</td>
-                <td>${event.participants || '-'}</td>
-            `;
-            eventsBody.appendChild(row);
-        });
+        elements.eventsBody.innerHTML = eventsToRender.length === 0
+            ? '<tr><td colspan="4" class="no-events">Nenhum evento encontrado</td></tr>'
+            : eventsToRender.map(event => `
+                <tr>
+                    <td>${event.title}</td>
+                    <td>${event.space}</td>
+                    <td>${event.floor}</td>
+                    <td>${event.startTime} às ${event.endTime}</td>
+                </tr>
+            `).join('');
     }
-    
+
     function filterEvents() {
-        const floorValue = floorFilter.value;
-        const timeValue = timeFilter.value;
-        const searchValue = searchInput.value.toLowerCase();
+        const floorValue = elements.floorFilter.value;
+        const timeValue = elements.timeFilter.value;
+        const searchValue = elements.searchInput.value.toLowerCase();
         
         const filteredEvents = events.filter(event => {
-            // Filter by floor
-            if (floorValue && event.floor !== floorValue) {
-                return false;
-            }
+            const matchesFloor = !floorValue || event.floor === floorValue;
+            const matchesTime = !timeValue || checkTimeFilter(event.startTime, timeValue);
+            const matchesSearch = !searchValue || 
+                event.title.toLowerCase().includes(searchValue) || 
+                event.space.toLowerCase().includes(searchValue);
             
-            // Filter by time
-            if (timeValue) {
-                if (timeValue === 'morning' && !event.startTime.includes('07:00')) {
-                    return false;
-                }
-                if (timeValue === 'afternoon' && !event.startTime.includes('13:00') && 
-                    !event.startTime.includes('14:00') && 
-                    !event.startTime.includes('15:00')) {
-                    return false;
-                }
-                if (timeValue === 'full-day' && !(event.startTime === '08:00' && event.endTime === '17:00')) {
-                    return false;
-                }
-            }
-            
-            // Filter by search
-            if (searchValue && !event.title.toLowerCase().includes(searchValue) && 
-                !event.space.toLowerCase().includes(searchValue) &&
-                !(event.description && event.description.toLowerCase().includes(searchValue))) {
-                return false;
-            }
-            
-            return true;
+            return matchesFloor && matchesTime && matchesSearch;
         });
         
         renderEvents(filteredEvents);
     }
-    
+
+    function checkTimeFilter(startTime, filter) {
+        switch(filter) {
+            case 'morning': return startTime >= '07:00' && startTime <= '12:00';
+            case 'afternoon': return startTime >= '13:00' && startTime <= '17:00';
+            case 'full-day': return startTime === '08:00';
+            default: return true;
+        }
+    }
+
     function updateHighlightedRoom() {
         if (events.length === 0) {
-            highlightedRoom.innerHTML = '';
+            elements.highlightedRoom.innerHTML = '';
             return;
         }
         
-        // Find the room with the longest event today
-        const longestEvent = events.reduce((longest, current) => {
-            const longestDuration = getDurationInMinutes(longest.startTime, longest.endTime);
-            const currentDuration = getDurationInMinutes(current.startTime, current.endTime);
-            return currentDuration > longestDuration ? current : longest;
-        }, events[0]);
+        const longestEvent = events.reduce((prev, current) => {
+            const prevDuration = getDurationInMinutes(prev.startTime, prev.endTime);
+            const currDuration = getDurationInMinutes(current.startTime, current.endTime);
+            return currDuration > prevDuration ? current : prev;
+        });
         
-        highlightedRoom.innerHTML = `
+        elements.highlightedRoom.innerHTML = `
             <h3>${longestEvent.space}</h3>
             <div class="room-schedule">
                 <span class="time-badge">${longestEvent.startTime} às ${longestEvent.endTime}</span>
@@ -154,14 +138,10 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
     }
-    
+
     function getDurationInMinutes(startTime, endTime) {
-        const [startHour, startMinute] = startTime.split(':').map(Number);
-        const [endHour, endMinute] = endTime.split(':').map(Number);
-        
-        return (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+        const [startH, startM] = startTime.split(':').map(Number);
+        const [endH, endM] = endTime.split(':').map(Number);
+        return (endH * 60 + endM) - (startH * 60 + startM);
     }
-    
-    // Start the application
-    init();
 });

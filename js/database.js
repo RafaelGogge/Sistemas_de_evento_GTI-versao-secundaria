@@ -1,57 +1,48 @@
-// Simula um banco de dados simples com armazenamento local
 class EventDatabase {
     constructor() {
-        this.events = JSON.parse(localStorage.getItem('etsus-events')) || [];
-        this.loadSampleData();
+        this.loadEvents();
     }
 
-    loadSampleData() {
+    loadEvents() {
+        this.events = JSON.parse(localStorage.getItem('etsus-events')) || [];
         if (this.events.length === 0) {
-            const sampleEvents = [
-                {
-                    id: this.generateId(),
-                    title: "ESPECIALIZAÇÃO EM EDUCAÇÃO NA SAÚDE PARA PRECEPTORES DO SUS - PSUS",
-                    description: "Curso de especialização para preceptores do SUS",
-                    space: "Lab. informática",
-                    floor: "1º",
-                    startTime: "07:00",
-                    endTime: "12:00",
-                    date: this.formatDate(new Date()),
-                    participants: 25,
-                    isPast: false
-                },
-                {
-                    id: this.generateId(),
-                    title: "ASSEMBLÉIA COSEMSYES",
-                    description: "Reunião geral dos coordenadores",
-                    space: "Auditório",
-                    floor: "3º",
-                    startTime: "08:00",
-                    endTime: "16:00",
-                    date: this.formatDate(new Date()),
-                    participants: 50,
-                    isPast: false
-                },
-                {
-                    id: this.generateId(),
-                    title: "REUNIÃO DE PLANEJAMENTO 2025 DO SEAS",
-                    description: "Planejamento anual do setor",
-                    space: "Sala 5",
-                    floor: "2º",
-                    startTime: "13:00",
-                    endTime: "17:00",
-                    date: this.formatDate(new Date()),
-                    participants: 15,
-                    isPast: false
-                }
-            ];
-            this.events = sampleEvents;
-            this.save();
+            this.initializeSampleData();
+        } else {
+            this.updatePastEvents();
         }
     }
 
+    initializeSampleData() {
+        const today = this.formatDate(new Date());
+        this.events = [
+            {
+                id: this.generateId(),
+                title: "ESPECIALIZAÇÃO EM EDUCAÇÃO NA SAÚDE PARA PRECEPTORES DO SUS - PSUS",
+                space: "Lab. informática",
+                floor: "1º",
+                startTime: "07:00",
+                endTime: "12:00",
+                date: today,
+                participants: 25,
+                isPast: false
+            },
+            {
+                id: this.generateId(),
+                title: "ASSEMBLÉIA COSEMSYES",
+                space: "Auditório",
+                floor: "3º",
+                startTime: "08:00",
+                endTime: "16:00",
+                date: today,
+                participants: 50,
+                isPast: false
+            }
+        ];
+        this.save();
+    }
+
     getAllEvents() {
-        return this.events;
+        return [...this.events];
     }
 
     getEventById(id) {
@@ -64,23 +55,17 @@ class EventDatabase {
     }
 
     getUpcomingEvents() {
-        const today = new Date();
-        const todayStr = this.formatDate(today);
-        const futureEvents = this.events.filter(event => event.date >= todayStr && !event.isPast);
-        
-        // Ordena por data mais próxima
-        return futureEvents.sort((a, b) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            return dateA - dateB;
-        });
+        const today = this.formatDate(new Date());
+        return this.events
+            .filter(event => event.date >= today && !event.isPast)
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
     }
 
     addEvent(eventData) {
         const newEvent = {
             id: this.generateId(),
             ...eventData,
-            isPast: false
+            isPast: this.checkIfPast(eventData.date, eventData.endTime)
         };
         this.events.push(newEvent);
         this.save();
@@ -90,8 +75,11 @@ class EventDatabase {
     updateEvent(id, eventData) {
         const index = this.events.findIndex(event => event.id === id);
         if (index !== -1) {
-            this.events[index] = { ...this.events[index], ...eventData };
-            this.checkIfPast(this.events[index]);
+            this.events[index] = {
+                ...this.events[index],
+                ...eventData,
+                isPast: this.checkIfPast(eventData.date, eventData.endTime)
+            };
             this.save();
             return true;
         }
@@ -108,43 +96,39 @@ class EventDatabase {
         return false;
     }
 
-    checkIfPast(event) {
-        const eventDate = new Date(event.date);
+    updatePastEvents() {
+        this.events.forEach(event => {
+            event.isPast = this.checkIfPast(event.date, event.endTime);
+        });
+        this.save();
+    }
+
+    checkIfPast(eventDate, endTime) {
         const today = new Date();
+        const eventDay = new Date(eventDate);
         
-        if (eventDate < today) {
-            event.isPast = true;
-        } else if (eventDate.toDateString() === today.toDateString()) {
-            // Se for hoje, verifica o horário
-            const now = new Date();
-            const endTime = event.endTime.split(':');
-            const endTimeDate = new Date();
-            endTimeDate.setHours(parseInt(endTime[0]), parseInt(endTime[1]), 0, 0);
-            
-            if (now > endTimeDate) {
-                event.isPast = true;
-            }
-        }
+        if (eventDay < today) return true;
+        if (eventDay > today) return false;
+        
+        const [hours, minutes] = endTime.split(':').map(Number);
+        const endTimeDate = new Date();
+        endTimeDate.setHours(hours, minutes, 0, 0);
+        
+        return today > endTimeDate;
     }
 
     save() {
-        // Atualiza status de eventos passados
-        this.events.forEach(event => this.checkIfPast(event));
         localStorage.setItem('etsus-events', JSON.stringify(this.events));
     }
 
     generateId() {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     }
 
     formatDate(date) {
         const d = new Date(date);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        return d.toISOString().split('T')[0];
     }
 }
 
-// Cria uma instância global do banco de dados
 const eventDB = new EventDatabase();

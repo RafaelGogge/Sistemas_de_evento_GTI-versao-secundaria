@@ -9,35 +9,29 @@
 </head>
 <body>
     <div class="container">
-        <header class="animated">
+        <header>
             <h1>Painel de Administração - EVENTOS ETSUS</h1>
             <a href="index.html" class="admin-link">Voltar para Visualização</a>
         </header>
         
         <div class="admin-container">
-            <div class="admin-sidebar">
+            <nav class="admin-sidebar" aria-label="Menu de navegação">
                 <h3>Menu</h3>
                 <ul>
                     <li><button id="btn-add-event" class="active">Adicionar Evento</button></li>
                     <li><button id="btn-view-events">Ver Todos os Eventos</button></li>
-                    <li><button id="btn-view-past">Eventos Passados</button></li>
                 </ul>
-            </div>
+            </nav>
             
-            <div class="admin-content">
-                <div id="form-container" class="form-container">
+            <main class="admin-content">
+                <section id="form-container" class="form-container">
                     <h2 id="form-title">Adicionar Novo Evento</h2>
                     <form id="event-form">
                         <input type="hidden" id="event-id">
                         
                         <div class="form-group">
                             <label for="event-title">Título do Evento*</label>
-                            <input type="text" id="event-title" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="event-description">Descrição</label>
-                            <textarea id="event-description" rows="3"></textarea>
+                            <input type="text" id="event-title" required maxlength="100">
                         </div>
                         
                         <div class="form-row">
@@ -48,7 +42,7 @@
                             
                             <div class="form-group">
                                 <label for="event-space">Espaço*</label>
-                                <input type="text" id="event-space" required>
+                                <input type="text" id="event-space" required maxlength="50">
                             </div>
                         </div>
                         
@@ -65,7 +59,7 @@
                             
                             <div class="form-group">
                                 <label for="event-participants">Participantes</label>
-                                <input type="number" id="event-participants" min="0">
+                                <input type="number" id="event-participants" min="0" max="500">
                             </div>
                         </div>
                         
@@ -87,19 +81,14 @@
                             <button type="button" id="btn-delete" class="btn-danger" style="display: none;">Excluir Evento</button>
                         </div>
                     </form>
-                </div>
+                </section>
                 
-                <div id="list-container" class="list-container" style="display: none;">
+                <section id="list-container" class="list-container" style="display: none;">
                     <h2 id="list-title">Todos os Eventos</h2>
                     <div class="list-actions">
-                        <input type="text" id="list-search" placeholder="Pesquisar eventos...">
-                        <select id="list-filter">
-                            <option value="all">Todos</option>
-                            <option value="current">Atuais/Futuros</option>
-                            <option value="past">Passados</option>
-                        </select>
+                        <input type="text" id="list-search" placeholder="Pesquisar eventos..." aria-label="Pesquisar eventos">
                     </div>
-                    <div class="events-list">
+                    <div class="table-responsive">
                         <table>
                             <thead>
                                 <tr>
@@ -115,8 +104,8 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
+                </section>
+            </main>
         </div>
     </div>
 

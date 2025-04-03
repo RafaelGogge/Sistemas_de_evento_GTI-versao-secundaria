@@ -1,272 +1,238 @@
 document.addEventListener('DOMContentLoaded', () => {
     // DOM elements
-    const eventForm = document.getElementById('event-form');
-    const eventIdInput = document.getElementById('event-id');
-    const eventTitleInput = document.getElementById('event-title');
-    const eventDescriptionInput = document.getElementById('event-description');
-    const eventDateInput = document.getElementById('event-date');
-    const eventSpaceInput = document.getElementById('event-space');
-    const eventFloorSelect = document.getElementById('event-floor');
-    const eventParticipantsInput = document.getElementById('event-participants');
-    const eventStartInput = document.getElementById('event-start');
-    const eventEndInput = document.getElementById('event-end');
-    const submitBtn = document.getElementById('btn-submit');
-    const cancelBtn = document.getElementById('btn-cancel');
-    const deleteBtn = document.getElementById('btn-delete');
-    
-    const addEventBtn = document.getElementById('btn-add-event');
-    const viewEventsBtn = document.getElementById('btn-view-events');
-    const viewPastBtn = document.getElementById('btn-view-past');
-    
-    const formContainer = document.getElementById('form-container');
-    const listContainer = document.getElementById('list-container');
-    const adminEventsBody = document.getElementById('admin-events-body');
-    const listSearchInput = document.getElementById('list-search');
-    const listFilterSelect = document.getElementById('list-filter');
-    const listTitle = document.getElementById('list-title');
-    const formTitle = document.getElementById('form-title');
-    
+    const elements = {
+        form: document.getElementById('event-form'),
+        formContainer: document.getElementById('form-container'),
+        listContainer: document.getElementById('list-container'),
+        adminEventsBody: document.getElementById('admin-events-body'),
+        listSearch: document.getElementById('list-search'),
+        formTitle: document.getElementById('form-title'),
+        listTitle: document.getElementById('list-title'),
+        btnAddEvent: document.getElementById('btn-add-event'),
+        btnViewEvents: document.getElementById('btn-view-events'),
+        btnCancel: document.getElementById('btn-cancel'),
+        btnSubmit: document.getElementById('btn-submit'),
+        btnDelete: document.getElementById('btn-delete'),
+        inputs: {
+            id: document.getElementById('event-id'),
+            title: document.getElementById('event-title'),
+            date: document.getElementById('event-date'),
+            space: document.getElementById('event-space'),
+            floor: document.getElementById('event-floor'),
+            participants: document.getElementById('event-participants'),
+            startTime: document.getElementById('event-start'),
+            endTime: document.getElementById('event-end')
+        }
+    };
+
     // State
     let currentEvent = null;
     let isEditing = false;
-    let currentListView = 'all';
-    
-    // Initialize the admin panel
+
+    // Initialize
+    init();
+
     function init() {
         setupEventListeners();
         showTodayAsDefaultDate();
+        showEventList();
     }
-    
+
     function setupEventListeners() {
-        // Form submission
-        eventForm.addEventListener('submit', handleFormSubmit);
-        cancelBtn.addEventListener('click', resetForm);
-        deleteBtn.addEventListener('click', handleDeleteEvent);
+        elements.form.addEventListener('submit', handleFormSubmit);
+        elements.btnCancel.addEventListener('click', resetForm);
+        elements.btnDelete.addEventListener('click', handleDeleteEvent);
         
-        // Navigation buttons
-        addEventBtn.addEventListener('click', showAddForm);
-        viewEventsBtn.addEventListener('click', () => showEventList('all'));
-        viewPastBtn.addEventListener('click', () => showEventList('past'));
+        elements.btnAddEvent.addEventListener('click', showAddForm);
+        elements.btnViewEvents.addEventListener('click', () => showEventList());
         
-        // List interactions
-        listSearchInput.addEventListener('input', filterEventList);
-        listFilterSelect.addEventListener('change', filterEventList);
+        elements.listSearch.addEventListener('input', filterEventList);
     }
-    
+
     function showTodayAsDefaultDate() {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        eventDateInput.value = `${year}-${month}-${day}`;
+        elements.inputs.date.value = new Date().toISOString().split('T')[0];
     }
-    
+
     function showAddForm() {
-        addEventBtn.classList.add('active');
-        viewEventsBtn.classList.remove('active');
-        viewPastBtn.classList.remove('active');
-        
+        elements.btnAddEvent.classList.add('active');
+        elements.btnViewEvents.classList.remove('active');
         resetForm();
-        formContainer.style.display = 'block';
-        listContainer.style.display = 'none';
+        toggleView('form');
     }
-    
-    function showEventList(view) {
-        viewEventsBtn.classList.toggle('active', view === 'all');
-        viewPastBtn.classList.toggle('active', view === 'past');
-        addEventBtn.classList.remove('active');
-        
-        currentListView = view;
-        listTitle.textContent = view === 'past' ? 'Eventos Passados' : 'Todos os Eventos';
-        listFilterSelect.value = view;
-        
+
+    function showEventList() {
+        elements.btnViewEvents.classList.add('active');
+        elements.btnAddEvent.classList.remove('active');
         loadEventList();
-        formContainer.style.display = 'none';
-        listContainer.style.display = 'block';
+        toggleView('list');
     }
-    
+
+    function toggleView(view) {
+        elements.formContainer.style.display = view === 'form' ? 'block' : 'none';
+        elements.listContainer.style.display = view === 'list' ? 'block' : 'none';
+    }
+
     function loadEventList() {
-        let events;
-        
-        if (currentListView === 'past') {
-            events = eventDB.getAllEvents().filter(event => event.isPast);
-        } else if (currentListView === 'all') {
-            events = eventDB.getAllEvents();
-        } else {
-            events = eventDB.getAllEvents().filter(event => !event.isPast);
-        }
-        
+        const events = eventDB.getAllEvents();
         renderEventList(events);
     }
-    
+
     function renderEventList(events) {
-        adminEventsBody.innerHTML = '';
-        
         if (events.length === 0) {
-            adminEventsBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum evento encontrado</td></tr>';
+            elements.adminEventsBody.innerHTML = '<tr><td colspan="5" class="no-events">Nenhum evento cadastrado</td></tr>';
             return;
         }
-        
-        // Sort events by date (newest first)
-        events.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        events.forEach(event => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${event.title}</td>
-                <td>${formatDateForDisplay(event.date)}</td>
-                <td>${event.startTime} às ${event.endTime}</td>
-                <td>${event.space}</td>
-                <td>
-                    <button class="action-btn edit-btn" data-id="${event.id}">Editar</button>
-                    <button class="action-btn delete-btn" data-id="${event.id}">Excluir</button>
-                </td>
-            `;
-            
-            if (event.isPast) {
-                row.style.opacity = '0.7';
-            }
-            
-            adminEventsBody.appendChild(row);
-        });
-        
-        // Add event listeners to the action buttons
+
+        elements.adminEventsBody.innerHTML = events
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .map(event => `
+                <tr ${event.isPast ? 'class="past-event"' : ''}>
+                    <td>${event.title}</td>
+                    <td>${formatDateForDisplay(event.date)}</td>
+                    <td>${event.startTime} às ${event.endTime}</td>
+                    <td>${event.space}</td>
+                    <td>
+                        <button class="action-btn edit-btn" data-id="${event.id}">Editar</button>
+                        <button class="action-btn delete-btn" data-id="${event.id}">Excluir</button>
+                    </td>
+                </tr>
+            `).join('');
+
+        // Add event listeners to action buttons
         document.querySelectorAll('.edit-btn').forEach(btn => {
             btn.addEventListener('click', () => editEvent(btn.dataset.id));
         });
-        
+
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', () => confirmDeleteEvent(btn.dataset.id));
         });
     }
-    
+
     function filterEventList() {
-        const searchValue = listSearchInput.value.toLowerCase();
-        const filterValue = listFilterSelect.value;
-        
-        let events;
-        
-        if (filterValue === 'past') {
-            events = eventDB.getAllEvents().filter(event => event.isPast);
-        } else if (filterValue === 'current') {
-            events = eventDB.getAllEvents().filter(event => !event.isPast);
-        } else {
-            events = eventDB.getAllEvents();
-        }
-        
-        if (searchValue) {
-            events = events.filter(event => 
-                event.title.toLowerCase().includes(searchValue) ||
-                event.space.toLowerCase().includes(searchValue) ||
-                (event.description && event.description.toLowerCase().includes(searchValue))
-            );
-        }
-        
+        const searchValue = elements.listSearch.value.toLowerCase();
+        const events = eventDB.getAllEvents().filter(event => 
+            event.title.toLowerCase().includes(searchValue) || 
+            event.space.toLowerCase().includes(searchValue)
+        );
         renderEventList(events);
     }
-    
+
     function editEvent(eventId) {
         const event = eventDB.getEventById(eventId);
-        
         if (!event) {
             alert('Evento não encontrado!');
             return;
         }
-        
+
         currentEvent = event;
         isEditing = true;
-        
-        // Fill the form with event data
-        eventIdInput.value = event.id;
-        eventTitleInput.value = event.title;
-        eventDescriptionInput.value = event.description || '';
-        eventDateInput.value = event.date;
-        eventSpaceInput.value = event.space;
-        eventFloorSelect.value = event.floor;
-        eventParticipantsInput.value = event.participants || '';
-        eventStartInput.value = event.startTime;
-        eventEndInput.value = event.endTime;
-        
+
+        // Fill form with event data
+        elements.inputs.id.value = event.id;
+        elements.inputs.title.value = event.title;
+        elements.inputs.date.value = event.date;
+        elements.inputs.space.value = event.space;
+        elements.inputs.floor.value = event.floor;
+        elements.inputs.participants.value = event.participants || '';
+        elements.inputs.startTime.value = event.startTime;
+        elements.inputs.endTime.value = event.endTime;
+
         // Update UI
-        formTitle.textContent = 'Editar Evento';
-        submitBtn.textContent = 'Atualizar Evento';
-        deleteBtn.style.display = 'inline-block';
-        
-        // Show the form
-        addEventBtn.classList.add('active');
-        viewEventsBtn.classList.remove('active');
-        viewPastBtn.classList.remove('active');
-        formContainer.style.display = 'block';
-        listContainer.style.display = 'none';
+        elements.formTitle.textContent = 'Editar Evento';
+        elements.btnSubmit.textContent = 'Atualizar';
+        elements.btnDelete.style.display = 'inline-block';
+
+        showAddForm();
     }
-    
+
     function confirmDeleteEvent(eventId) {
         if (confirm('Tem certeza que deseja excluir este evento?')) {
             eventDB.deleteEvent(eventId);
             loadEventList();
+            if (isEditing && currentEvent && currentEvent.id === eventId) {
+                resetForm();
+                showEventList();
+            }
         }
     }
-    
+
     function handleDeleteEvent() {
-        if (currentEvent && confirm('Tem certeza que deseja excluir este evento?')) {
-            eventDB.deleteEvent(currentEvent.id);
-            resetForm();
-            showEventList(currentListView);
+        if (currentEvent) {
+            confirmDeleteEvent(currentEvent.id);
         }
     }
-    
+
     function handleFormSubmit(e) {
         e.preventDefault();
-        
+
+        // Form validation
+        if (!validateForm()) return;
+
         const eventData = {
-            title: eventTitleInput.value.trim(),
-            description: eventDescriptionInput.value.trim(),
-            date: eventDateInput.value,
-            space: eventSpaceInput.value.trim(),
-            floor: eventFloorSelect.value,
-            participants: eventParticipantsInput.value ? parseInt(eventParticipantsInput.value) : null,
-            startTime: eventStartInput.value,
-            endTime: eventEndInput.value
+            title: elements.inputs.title.value.trim(),
+            date: elements.inputs.date.value,
+            space: elements.inputs.space.value.trim(),
+            floor: elements.inputs.floor.value,
+            participants: elements.inputs.participants.value ? parseInt(elements.inputs.participants.value) : null,
+            startTime: elements.inputs.startTime.value,
+            endTime: elements.inputs.endTime.value
         };
-        
-        // Validate time
-        if (eventData.startTime >= eventData.endTime) {
-            alert('O horário de término deve ser após o horário de início!');
-            return;
-        }
-        
+
         if (isEditing) {
-            // Update existing event
-            eventDB.updateEvent(eventIdInput.value, eventData);
+            eventDB.updateEvent(currentEvent.id, eventData);
             alert('Evento atualizado com sucesso!');
         } else {
-            // Add new event
             eventDB.addEvent(eventData);
-            alert('Evento adicionado com sucesso!');
+            alert('Evento cadastrado com sucesso!');
         }
-        
+
         resetForm();
-        showEventList(currentListView);
+        showEventList();
     }
-    
+
+    function validateForm() {
+        // Check required fields
+        if (!elements.inputs.title.value.trim() || 
+            !elements.inputs.date.value || 
+            !elements.inputs.space.value.trim() || 
+            !elements.inputs.floor.value) {
+            alert('Por favor, preencha todos os campos obrigatórios!');
+            return false;
+        }
+
+        // Check time validity
+        if (elements.inputs.startTime.value >= elements.inputs.endTime.value) {
+            alert('O horário de término deve ser após o horário de início!');
+            return false;
+        }
+
+        // Check if date is in the past
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const eventDate = new Date(elements.inputs.date.value);
+        
+        if (eventDate < today && !confirm('Este evento está marcado para uma data passada. Deseja continuar?')) {
+            return false;
+        }
+
+        return true;
+    }
+
     function resetForm() {
-        eventForm.reset();
-        eventIdInput.value = '';
+        elements.form.reset();
+        elements.inputs.id.value = '';
         currentEvent = null;
         isEditing = false;
-        
-        formTitle.textContent = 'Adicionar Novo Evento';
-        submitBtn.textContent = 'Salvar Evento';
-        deleteBtn.style.display = 'none';
-        
+
+        elements.formTitle.textContent = 'Adicionar Novo Evento';
+        elements.btnSubmit.textContent = 'Salvar';
+        elements.btnDelete.style.display = 'none';
+
         showTodayAsDefaultDate();
     }
-    
+
     function formatDateForDisplay(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR');
+        const [year, month, day] = dateString.split('-');
+        return `${day}/${month}/${year}`;
     }
-    
-    // Initialize the admin panel
-    init();
 });
