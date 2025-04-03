@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVENTOS ETSUS</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="animated">
+            <h1 id="page-title">EVENTOS ETSUS - <span id="current-date"></span></h1>
+            <a href="admin.html" class="admin-link">Área do Administrador</a>
+        </header>
+        
+        <div class="stats-container">
+            <div class="stat-box animated delay-1">
+                <h3>Participantes Dia</h3>
+                <p id="daily-participants">-</p>
+            </div>
+            <div class="stat-box animated delay-2">
+                <h3>Participantes Mês</h3>
+                <p id="monthly-participants">-</p>
+            </div>
+            <div class="stat-box animated delay-3">
+                <h3>Participantes Ano</h3>
+                <p id="yearly-participants">-</p>
+            </div>
+        </div>
+        
+        <div class="view-options">
+            <button id="view-current" class="active">Eventos de Hoje</button>
+            <button id="view-upcoming">Próximos Eventos</button>
+        </div>
+        
+        <div class="filters animated delay-1">
+            <div class="filter-item">
+                <select id="floor-filter">
+                    <option value="">Todos os andares</option>
+                    <option value="1º">1º Andar</option>
+                    <option value="2º">2º Andar</option>
+                    <option value="3º">3º Andar</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <select id="time-filter">
+                    <option value="">Todos os horários</option>
+                    <option value="morning">Manhã (07:00-12:00)</option>
+                    <option value="afternoon">Tarde (13:00-17:00)</option>
+                    <option value="full-day">Dia todo (08:00-17:00)</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <input type="text" id="search-input" placeholder="Pesquisar eventos...">
+            </div>
+        </div>
+        
+        <div class="events-container animated delay-2">
+            <table id="events-table">
+                <thead>
+                    <tr>
+                        <th>Evento</th>
+                        <th>Descrição</th>
+                        <th>Espaço</th>
+                        <th>Andar</th>
+                        <th>Horário</th>
+                        <th>Participantes</th>
+                    </tr>
+                </thead>
+                <tbody id="events-body">
+                    <!-- Events will be loaded here dynamically -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="highlighted-room" class="room-highlight animated delay-3">
+            <!-- Highlighted room will be loaded here dynamically -->
+        </div>
+    </div>
+
+    <script src="js/database.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

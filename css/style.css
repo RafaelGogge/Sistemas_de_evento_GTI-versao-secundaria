@@ -1,0 +1,236 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --accent-color: #e74c3c;
+    --light-color: #ecf0f1;
+    --dark-color: #2c3e50;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: var(--dark-color);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 30px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+header h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.admin-link {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    text-decoration: none;
+    background-color: var(--secondary-color);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.admin-link:hover {
+    background-color: #2980b9;
+}
+
+.stats-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+    gap: 15px;
+}
+
+.stat-box {
+    background-color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    flex: 1;
+    min-width: 200px;
+    text-align: center;
+}
+
+.stat-box h3 {
+    color: var(--secondary-color);
+    margin-bottom: 5px;
+}
+
+.stat-box p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.view-options {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.view-options button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #ddd;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.view-options button.active {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.view-options button:hover:not(.active) {
+    background-color: #ccc;
+}
+
+.filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-item {
+    flex: 1;
+    min-width: 200px;
+}
+
+select, input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.events-container {
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    overflow-x: auto;
+    margin-bottom: 30px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: var(--primary-color);
+    color: white;
+    position: sticky;
+    top: 0;
+}
+
+tr:hover {
+    background-color: #f5f5f5;
+}
+
+.room-highlight {
+    background-color: var(--light-color);
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.room-highlight h3 {
+    color: var(--secondary-color);
+    margin-bottom: 10px;
+}
+
+.room-schedule {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.time-badge {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animated {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+
+@media (max-width: 768px) {
+    header {
+        padding: 20px 15px 50px 15px;
+    }
+    
+    .admin-link {
+        top: auto;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    th, td {
+        padding: 8px 10px;
+        font-size: 0.9rem;
+    }
+    
+    .stats-container {
+        flex-direction: column;
+    }
+    
+    .stat-box {
+        min-width: 100%;
+    }
+    
+    .view-options {
+        flex-direction: column;
+    }
+}
