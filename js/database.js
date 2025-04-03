@@ -7,9 +7,8 @@ class EventDatabase {
         this.events = JSON.parse(localStorage.getItem('etsus-events')) || [];
         if (this.events.length === 0) {
             this.initializeSampleData();
-        } else {
-            this.updatePastEvents();
         }
+        this.updatePastEvents();
     }
 
     initializeSampleData() {
@@ -17,24 +16,13 @@ class EventDatabase {
         this.events = [
             {
                 id: this.generateId(),
-                title: "ESPECIALIZAÇÃO EM EDUCAÇÃO NA SAÚDE PARA PRECEPTORES DO SUS - PSUS",
-                space: "Lab. informática",
-                floor: "1º",
-                startTime: "07:00",
-                endTime: "12:00",
-                date: today,
-                participants: 25,
-                isPast: false
-            },
-            {
-                id: this.generateId(),
-                title: "ASSEMBLÉIA COSEMSYES",
+                title: "Reunião de Planejamento Inicial",
                 space: "Auditório",
                 floor: "3º",
-                startTime: "08:00",
-                endTime: "16:00",
+                startTime: "09:00",
+                endTime: "12:00",
                 date: today,
-                participants: 50,
+                participants: 20,
                 isPast: false
             }
         ];
@@ -106,19 +94,20 @@ class EventDatabase {
     checkIfPast(eventDate, endTime) {
         const today = new Date();
         const eventDay = new Date(eventDate);
-        
+
         if (eventDay < today) return true;
         if (eventDay > today) return false;
-        
+
         const [hours, minutes] = endTime.split(':').map(Number);
         const endTimeDate = new Date();
         endTimeDate.setHours(hours, minutes, 0, 0);
-        
+
         return today > endTimeDate;
     }
 
     save() {
         localStorage.setItem('etsus-events', JSON.stringify(this.events));
+        window.dispatchEvent(new CustomEvent('eventsUpdated'));
     }
 
     generateId() {
