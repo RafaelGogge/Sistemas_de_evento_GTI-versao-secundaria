@@ -24,9 +24,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function init() {
         updateCurrentDate();
-        loadStats();
         setupEventListeners();
+        loadData();
+        
+        // Listen for updates from admin
+        window.addEventListener('eventsUpdated', loadData);
+    }
+
+    function loadData() {
         loadEvents();
+        loadStats();
     }
 
     function updateCurrentDate() {
@@ -80,13 +87,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderEvents(eventsToRender) {
         elements.eventsBody.innerHTML = eventsToRender.length === 0
-            ? '<tr><td colspan="4" class="no-events">Nenhum evento encontrado</td></tr>'
+            ? '<tr><td colspan="5" class="no-events">Nenhum evento encontrado</td></tr>'
             : eventsToRender.map(event => `
                 <tr>
                     <td>${event.title}</td>
                     <td>${event.space}</td>
                     <td>${event.floor}</td>
                     <td>${event.startTime} às ${event.endTime}</td>
+                    <td>${event.participants || '-'}</td>
                 </tr>
             `).join('');
     }
