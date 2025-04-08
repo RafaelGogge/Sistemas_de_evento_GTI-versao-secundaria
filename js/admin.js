@@ -42,10 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.form.addEventListener('submit', handleFormSubmit);
         elements.btnCancel.addEventListener('click', resetForm);
         elements.btnDelete.addEventListener('click', handleDeleteEvent);
-        
+
         elements.btnAddEvent.addEventListener('click', showAddForm);
         elements.btnViewEvents.addEventListener('click', () => showEventList());
-        
+
         elements.listSearch.addEventListener('input', filterEventList);
     }
 
@@ -110,8 +110,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function filterEventList() {
         const searchValue = elements.listSearch.value.toLowerCase();
-        const events = eventDB.getAllEvents().filter(event => 
-            event.title.toLowerCase().includes(searchValue) || 
+        const events = eventDB.getAllEvents().filter(event =>
+            event.title.toLowerCase().includes(searchValue) ||
             event.space.toLowerCase().includes(searchValue)
         );
         renderEventList(events);
@@ -149,6 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm('Tem certeza que deseja excluir este evento?')) {
             eventDB.deleteEvent(eventId);
             loadEventList();
+            // Dispara evento para atualizar a página index
+            window.dispatchEvent(new CustomEvent('eventsUpdated'));
+
             if (isEditing && currentEvent && currentEvent.id === eventId) {
                 resetForm();
                 showEventList();
@@ -165,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleFormSubmit(e) {
         e.preventDefault();
 
-        // Form validation
+        // Validação do formulário
         if (!validateForm()) return;
 
         const eventData = {
@@ -179,11 +182,18 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         if (isEditing) {
-            eventDB.updateEvent(currentEvent.id, eventData);
-            alert('Evento atualizado com sucesso!');
+            // Atualiza evento existente
+            if (eventDB.updateEvent(currentEvent.id, eventData)) {
+                alert('Evento atualizado com sucesso!');
+                // Dispara evento para atualizar a página index
+                window.dispatchEvent(new CustomEvent('eventsUpdated'));
+            }
         } else {
+            // Adiciona novo evento
             eventDB.addEvent(eventData);
             alert('Evento cadastrado com sucesso!');
+            // Dispara evento para atualizar a página index
+            window.dispatchEvent(new CustomEvent('eventsUpdated'));
         }
 
         resetForm();
@@ -191,27 +201,54 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function validateForm() {
-        // Check required fields
-        if (!elements.inputs.title.value.trim() || 
-            !elements.inputs.date.value || 
-            !elements.inputs.space.value.trim() || 
-            !elements.inputs.floor.value) {
-            alert('Por favor, preencha todos os campos obrigatórios!');
-            return false;
+        // Verifica campos obrigatórios
+        const requiredFields = [
+            { field: elements.inputs.title, name: 'Título do Evento' },
+            { field: elements.inputs.date, name: 'Data' },
+            { field: elements.inputs.space, name: 'Espaço' },
+            { field: elements.inputs.floor, name: 'Andar' }
+        ];
+
+        for (const { field, name } of requiredFields) {
+            if (!field.value.trim()) {
+                alert(`Por favor, preencha o campo "${name}"!`);
+                field.focus();
+                return false;
+            }
         }
 
-        // Check time validity
+        // Valida horários
         if (elements.inputs.startTime.value >= elements.inputs.endTime.value) {
             alert('O horário de término deve ser após o horário de início!');
+            elements.inputs.startTime.focus();
             return false;
         }
 
-        // Check if date is in the past
+        // Valida data (não pode ser no passado)
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const eventDate = new Date(elements.inputs.date.value);
-        
-        if (eventDate < today && !confirm('Este evento está marcado para uma data passada. Deseja continuar?')) {
+
+        if (eventDate < today) {
+            if (!confirm('A data selecionada é anterior à data atual. Deseja continuar mesmo assim?')) {
+                elements.inputs.date.focus();
+                return false;
+            }
+        }
+
+        // Validar caracteres potencialmente perigosos
+        const regex = /[<>"'`]/g;
+        if (regex.test(elements.inputs.title.value) ||
+            regex.test(elements.inputs.space.value)) {
+            alert('Por favor, não utilize caracteres especiais como < > " \' `');
+            return false;
+        }
+
+        // Validar data máxima (1 ano no futuro)
+        const maxDate = new Date();
+        maxDate.setFullYear(maxDate.getFullYear() + 1);
+        if (new Date(elements.inputs.date.value) > maxDate) {
+            alert('A data não pode ser mais que 1 ano no futuro');
             return false;
         }
 
@@ -224,10 +261,12 @@ document.addEventListener('DOMContentLoaded', () => {
         currentEvent = null;
         isEditing = false;
 
+        // Restaura texto dos botões
         elements.formTitle.textContent = 'Adicionar Novo Evento';
         elements.btnSubmit.textContent = 'Salvar';
         elements.btnDelete.style.display = 'none';
 
+        // Define data padrão (hoje)
         showTodayAsDefaultDate();
     }
 
@@ -235,4 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const [year, month, day] = dateString.split('-');
         return `${day}/${month}/${year}`;
     }
+
+    // Inicializa o painel de administração
+    init();
 });

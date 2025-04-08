@@ -21,12 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize
     init();
+    console.log(eventDB.getAllEvents());
 
     function init() {
         updateCurrentDate();
         setupEventListeners();
         loadData();
-        
+
         // Listen for updates from admin
         window.addEventListener('eventsUpdated', loadData);
     }
@@ -44,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadStats() {
         const todayEvents = eventDB.getCurrentEvents();
         const totalParticipants = todayEvents.reduce((sum, event) => sum + (event.participants || 0), 0);
-        
+
         elements.dailyParticipants.textContent = totalParticipants;
         elements.monthlyParticipants.textContent = "1500";
         elements.yearlyParticipants.textContent = "750";
@@ -54,13 +55,22 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.floorFilter.addEventListener('change', filterEvents);
         elements.timeFilter.addEventListener('change', filterEvents);
         elements.searchInput.addEventListener('input', filterEvents);
-        
+        window.addEventListener('eventsUpdated', () => {
+            try {
+                loadData();
+            } catch (e) {
+                console.error('Erro ao atualizar eventos:', e);
+                // Forçar recarregamento como fallback
+                setTimeout(() => location.reload(), 1000);
+            }
+        });
+
         elements.viewCurrentBtn.addEventListener('click', () => {
             currentView = 'today';
             updateActiveButton();
             loadEvents();
         });
-        
+
         elements.viewUpcomingBtn.addEventListener('click', () => {
             currentView = 'upcoming';
             updateActiveButton();
@@ -71,16 +81,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateActiveButton() {
         elements.viewCurrentBtn.classList.toggle('active', currentView === 'today');
         elements.viewUpcomingBtn.classList.toggle('active', currentView === 'upcoming');
-        elements.pageTitle.textContent = currentView === 'today' 
+        elements.pageTitle.textContent = currentView === 'today'
             ? `EVENTOS ETSUS - ${elements.currentDateElement.textContent}`
             : 'EVENTOS ETSUS - PRÓXIMOS EVENTOS';
     }
 
     function loadEvents() {
-        events = currentView === 'today' 
-            ? eventDB.getCurrentEvents() 
+        events = currentView === 'today'
+            ? eventDB.getCurrentEvents()
             : eventDB.getUpcomingEvents();
-        
+
         renderEvents(events);
         updateHighlightedRoom();
     }
@@ -103,22 +113,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const floorValue = elements.floorFilter.value;
         const timeValue = elements.timeFilter.value;
         const searchValue = elements.searchInput.value.toLowerCase();
-        
+
         const filteredEvents = events.filter(event => {
             const matchesFloor = !floorValue || event.floor === floorValue;
             const matchesTime = !timeValue || checkTimeFilter(event.startTime, timeValue);
-            const matchesSearch = !searchValue || 
-                event.title.toLowerCase().includes(searchValue) || 
+            const matchesSearch = !searchValue ||
+                event.title.toLowerCase().includes(searchValue) ||
                 event.space.toLowerCase().includes(searchValue);
-            
+
             return matchesFloor && matchesTime && matchesSearch;
         });
-        
+
         renderEvents(filteredEvents);
     }
 
     function checkTimeFilter(startTime, filter) {
-        switch(filter) {
+        switch (filter) {
             case 'morning': return startTime >= '07:00' && startTime <= '12:00';
             case 'afternoon': return startTime >= '13:00' && startTime <= '17:00';
             case 'full-day': return startTime === '08:00';
@@ -131,13 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.highlightedRoom.innerHTML = '';
             return;
         }
-        
+
         const longestEvent = events.reduce((prev, current) => {
             const prevDuration = getDurationInMinutes(prev.startTime, prev.endTime);
             const currDuration = getDurationInMinutes(current.startTime, current.endTime);
             return currDuration > prevDuration ? current : prev;
         });
-        
+
         elements.highlightedRoom.innerHTML = `
             <h3>${longestEvent.space}</h3>
             <div class="room-schedule">
@@ -153,3 +163,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return (endH * 60 + endM) - (startH * 60 + startM);
     }
 });
+
+function loadEvents() {
+    console.log("Eventos no localStorage:", localStorage.getItem('etsus-events'));
+    events = currentView === 'today' 
+        ? eventDB.getCurrentEvents() 
+        : eventDB.getUpcomingEvents();
+    
+    console.log("Eventos carregados:", events);
+    renderEvents(events);
+    updateHighlightedRoom();
+}

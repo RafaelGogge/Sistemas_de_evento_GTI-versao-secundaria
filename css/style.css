@@ -69,7 +69,7 @@ header h1 {
     background-color: white;
     padding: 15px;
     border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     text-align: center;
 }
 
@@ -114,7 +114,8 @@ header h1 {
     margin-bottom: 20px;
 }
 
-select, input {
+select,
+input {
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
@@ -125,7 +126,7 @@ select, input {
 .events-container {
     background-color: white;
     border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     margin-bottom: 30px;
     overflow: hidden;
 }
@@ -140,7 +141,8 @@ table {
     min-width: 600px;
 }
 
-th, td {
+th,
+td {
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid #ddd;
@@ -182,19 +184,45 @@ th {
     header {
         padding: 15px 15px 60px 15px;
     }
-    
+
     .admin-link {
         top: auto;
         bottom: 15px;
         left: 50%;
         transform: translateX(-50%);
     }
-    
-    th, td {
+
+    th,
+    td {
         padding: 8px 10px;
     }
-    
+
     .view-options {
         flex-direction: column;
+    }
+}
+
+/* Adicionado ao final do arquivo */
+.no-events {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}
+
+.past-event {
+    opacity: 0.7;
+    background-color: #f9f9f9;
+}
+
+.past-event td {
+    color: #999;
+}
+
+/* Melhorar acessibilidade para usuários com preferência por reduzir movimento */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
     }
 }

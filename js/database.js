@@ -105,9 +105,16 @@ class EventDatabase {
         return today > endTimeDate;
     }
 
+    // Adicionado no método save() verificação de localStorage disponível
     save() {
-        localStorage.setItem('etsus-events', JSON.stringify(this.events));
-        window.dispatchEvent(new CustomEvent('eventsUpdated'));
+        try {
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem('etsus-events', JSON.stringify(this.events));
+                window.dispatchEvent(new CustomEvent('eventsUpdated'));
+            }
+        } catch (e) {
+            console.error('Erro ao acessar localStorage:', e);
+        }
     }
 
     generateId() {
